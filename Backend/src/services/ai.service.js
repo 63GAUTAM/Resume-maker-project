@@ -160,9 +160,11 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 
 
 async function generatePdfFromHtml(htmlContent) {
+    const isLocal = process.platform === "win32" || process.platform === "darwin"
     let launchOptions = {}
     
-    if (process.env.NODE_ENV === "production") {
+    if (!isLocal) {
+        // Production Linux (Render, AWS, etc.)
         launchOptions = {
             args: chromium.args,
             defaultViewport: chromium.defaultViewport,
