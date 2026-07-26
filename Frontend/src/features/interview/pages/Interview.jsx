@@ -61,19 +61,30 @@ const Interview = () => {
     const [ activeNav, setActiveNav ] = useState('technical')
     const { report, getReportById, loading, getResumePdf } = useInterview()
     const { interviewId } = useParams()
+    const navigate = useNavigate()
 
-    useEffect(() => {
-        if (interviewId) {
-            getReportById(interviewId)
-        }
-    }, [ interviewId ])
-
-
-
-    if (loading || !report) {
+    if (loading) {
         return (
             <main className='loading-screen'>
                 <h1>Loading your interview plan...</h1>
+            </main>
+        )
+    }
+
+    if (!report) {
+        return (
+            <main className='loading-screen'>
+                <h1>Interview Plan Not Found</h1>
+                <p style={{ marginTop: '1rem', color: '#94a3b8' }}>
+                    The requested interview report could not be found or failed to load.
+                </p>
+                <button
+                    onClick={() => navigate('/')}
+                    className='button primary-button'
+                    style={{ marginTop: '1.5rem', cursor: 'pointer' }}
+                >
+                    Back to Home
+                </button>
             </main>
         )
     }
@@ -90,6 +101,16 @@ const Interview = () => {
                 {/* ── Left Nav ── */}
                 <nav className='interview-nav'>
                     <div className="nav-content">
+                        <button
+                            className='interview-nav__item'
+                            onClick={() => navigate('/')}
+                            style={{ marginBottom: '1.5rem', border: '1px solid rgba(255, 45, 120, 0.2)' }}
+                        >
+                            <span className='interview-nav__icon'>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff2d78" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.2rem' }}><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            </span>
+                            <span style={{ color: '#ff2d78', fontWeight: '600' }}>Back to Home</span>
+                        </button>
                         <p className='interview-nav__label'>Sections</p>
                         {NAV_ITEMS.map(item => (
                             <button

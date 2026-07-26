@@ -8,26 +8,39 @@ const Home = () => {
     const { loading, generateReport,reports } = useInterview()
     const [ jobDescription, setJobDescription ] = useState("")
     const [ selfDescription, setSelfDescription ] = useState("")
+    const [ model, setModel ] = useState("gemini-3.5-flash")
+    const [ selectedFile, setSelectedFile ] = useState(null)
     const resumeInputRef = useRef()
 
     const navigate = useNavigate()
 
     const handleGenerateReport = async () => {
-        const resumeFile = resumeInputRef.current.files[ 0 ]
-        const data = await generateReport({ jobDescription, selfDescription, resumeFile })
-        navigate(`/interview/${data._id}`)
-    }
-
-    if (loading) {
-        return (
-            <main className='loading-screen'>
-                <h1>Loading your interview plan...</h1>
-            </main>
-        )
+        const resumeFile = resumeInputRef.current?.files?.[ 0 ]
+        if (!jobDescription.trim()) {
+            alert("Please provide a target job description.")
+            return
+        }
+        if (!resumeFile && !selfDescription.trim()) {
+            alert("Please upload a resume or provide a self-description.")
+            return
+        }
+        const result = await generateReport({ jobDescription, selfDescription, resumeFile, model })
+        if (result && result.success && result.interviewReport?._id) {
+            navigate(`/interview/${result.interviewReport._id}`)
+        } else if (result && result.error) {
+            alert(`Error: ${result.error}`)
+        }
     }
 
     return (
         <div className='home-page'>
+            {loading && (
+                <div className='loading-overlay'>
+                    <div className='loading-spinner' />
+                    <h1>Generating your interview plan...</h1>
+                    <p>This may take up to 30 seconds</p>
+                </div>
+            )}
 
             {/* Page Header */}
             <header className='page-header'>
@@ -54,7 +67,7 @@ const Home = () => {
                             placeholder={`Paste the full job description here...\ne.g. 'Senior Frontend Engineer at Google requires proficiency in React, TypeScript, and large-scale system design...'`}
                             maxLength={5000}
                         />
-                        <div className='char-counter'>0 / 5000 chars</div>
+                        <div className='char-counter'>{jobDescription.length} / 5000 chars</div>
                     </div>
 
                     {/* Vertical Divider */}
@@ -75,13 +88,71 @@ const Home = () => {
                                 Upload Resume
                                 <span className='badge badge--best'>Best Results</span>
                             </label>
-                            <label className='dropzone' htmlFor='resume'>
+                            <label 
+                                className='dropzone' 
+                                htmlFor='resume'
+                                onDragOver={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    const file = e.dataTransfer.files?.[0]
+                                    if (file) {
+                                        if (file.type !== "application/pdf") {
+                                            alert("Only PDF files are supported.")
+                                            return
+                                        }
+                                        if (file.size > 5 * 1024 * 1024) {
+                                            alert("File size exceeds 5MB limit.")
+                                            return
+                                        }
+                                        if (resumeInputRef.current) {
+                                            const dataTransfer = new DataTransfer()
+                                            dataTransfer.items.add(file)
+                                            resumeInputRef.current.files = dataTransfer.files
+                                        }
+                                        setSelectedFile(file)
+                                    }
+                                }}
+                            >
                                 <span className='dropzone__icon'>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" /><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" /></svg>
                                 </span>
-                                <p className='dropzone__title'>Click to upload or drag &amp; drop</p>
-                                <p className='dropzone__subtitle'>PDF or DOCX (Max 5MB)</p>
-                                <input ref={resumeInputRef} hidden type='file' id='resume' name='resume' accept='.pdf,.docx' />
+                                {selectedFile ? (
+                                    <>
+                                        <p className='dropzone__title' style={{ color: '#6366f1', fontWeight: 'bold' }}>{selectedFile.name}</p>
+                                        <p className='dropzone__subtitle'>{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB - Click to change</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className='dropzone__title'>Click to upload or drag &amp; drop</p>
+                                        <p className='dropzone__subtitle'>PDF (Max 5MB)</p>
+                                    </>
+                                )}
+                                <input 
+                                    ref={resumeInputRef} 
+                                    hidden 
+                                    type='file' 
+                                    id='resume' 
+                                    name='resume' 
+                                    accept='.pdf' 
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0] || null
+                                        if (file) {
+                                            if (file.size > 5 * 1024 * 1024) {
+                                                alert("File size exceeds 5MB limit.")
+                                                e.target.value = ""
+                                                setSelectedFile(null)
+                                                return
+                                            }
+                                            setSelectedFile(file)
+                                        } else {
+                                            setSelectedFile(null)
+                                        }
+                                    }}
+                                />
                             </label>
                         </div>
 
@@ -111,8 +182,27 @@ const Home = () => {
                 </div>
 
                 {/* Card Footer */}
-                <div className='interview-card__footer'>
-                    <span className='footer-info'>AI-Powered Strategy Generation &bull; Approx 30s</span>
+                <div className='interview-card__footer' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span className='footer-info' style={{ margin: 0 }}>Model:</span>
+                        <select 
+                            value={model} 
+                            onChange={(e) => setModel(e.target.value)}
+                            style={{
+                                backgroundColor: '#1e2535',
+                                color: '#e6edf3',
+                                border: '1px solid #2a3348',
+                                borderRadius: '0.4rem',
+                                padding: '0.4rem 0.75rem',
+                                fontSize: '0.85rem',
+                                outline: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+                            <option value="gemini-3.5-pro">Gemini 3.5 Pro</option>
+                        </select>
+                    </div>
                     <button
                         onClick={handleGenerateReport}
                         className='generate-btn'>
