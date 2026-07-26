@@ -1,7 +1,8 @@
 const { GoogleGenAI } = require("@google/genai")
 const { z } = require("zod")
 const { zodToJsonSchema } = require("zod-to-json-schema")
-const puppeteer = require("puppeteer")
+const puppeteer = require("puppeteer-core")
+const chromium = require("@sparticuz/chromium")
 
 // Parse API keys list from comma-separated env values, with fallbacks
 function getApiKeys() {
@@ -159,15 +160,47 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 
 
 async function generatePdfFromHtml(htmlContent) {
-    const browser = await puppeteer.launch({
-        headless: true,
-        args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-gpu"
-        ]
-    })
+    let launchOptions = {}
+    
+    if (process.env.NODE_ENV === "production") {
+        launchOptions = {
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath(),
+            headless: chromium.headless,
+        }
+    } else {
+        // Local development: use standard local chrome or chromium path
+        launchOptions = {
+            headless: true,
+            args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu"
+            ]
+        }
+        
+        // In local windows, find Google Chrome
+        if (process.platform === "win32") {
+            const fs = require("fs")
+            const possiblePaths = [
+                "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+                "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+                `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`
+            ]
+            for (const path of possiblePaths) {
+                if (fs.existsSync(path)) {
+                    launchOptions.executablePath = path
+                    break
+                }
+            }
+        } else if (process.platform === "darwin") {
+            launchOptions.executablePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        }
+    }
+
+    const browser = await puppeteer.launch(launchOptions)
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: "networkidle0" })
 
