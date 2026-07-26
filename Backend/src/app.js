@@ -6,8 +6,9 @@ const app = express()
 
 app.use(express.json())
 app.use(cookieParser())
+const cleanFrontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, "") : ""
 const allowedOrigins = [
-    process.env.FRONTEND_URL
+    cleanFrontendUrl
 ].filter(Boolean)
 
 app.use(cors({
@@ -17,8 +18,12 @@ app.use(cors({
         if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
             return callback(null, true);
         }
+        
+        // Clean origin trailing slash just in case
+        const cleanOrigin = origin.replace(/\/$/, "")
+        
         // Allow production frontend url
-        if (allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL) {
+        if (allowedOrigins.includes(cleanOrigin) || cleanOrigin === cleanFrontendUrl) {
             return callback(null, true);
         }
         return callback(new Error("Not allowed by CORS"));
