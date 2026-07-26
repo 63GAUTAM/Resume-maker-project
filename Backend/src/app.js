@@ -6,11 +6,19 @@ const app = express()
 
 app.use(express.json())
 app.use(cookieParser())
+const allowedOrigins = [
+    process.env.FRONTEND_URL
+].filter(Boolean)
+
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
         // Allow localhost with any port in development
         if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+            return callback(null, true);
+        }
+        // Allow production frontend url
+        if (allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL) {
             return callback(null, true);
         }
         return callback(new Error("Not allowed by CORS"));
