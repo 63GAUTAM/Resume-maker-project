@@ -2,10 +2,12 @@ import React, { useState, useRef } from 'react'
 import "../style/home.scss"
 import { useInterview } from '../hooks/useInterview.js'
 import { useNavigate } from 'react-router'
+import { useAuth } from '../../auth/hooks/useAuth.js'
 
 const Home = () => {
 
     const { loading, generateReport,reports } = useInterview()
+    const { handleLogout, user } = useAuth()
     const [ jobDescription, setJobDescription ] = useState("")
     const [ selfDescription, setSelfDescription ] = useState("")
     const [ model, setModel ] = useState("gemini-3.5-flash")
@@ -41,6 +43,44 @@ const Home = () => {
                     <p>This may take up to 30 seconds</p>
                 </div>
             )}
+
+            {/* Top Navigation / Header Bar */}
+            <div className="top-bar" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%',
+                maxWidth: '900px',
+                padding: '0.5rem 1rem',
+                boxSizing: 'border-box'
+            }}>
+                <span className="user-welcome" style={{ color: '#7d8590', fontSize: '0.85rem' }}>
+                    Signed in as <strong style={{ color: '#e6edf3' }}>{user?.username || 'User'}</strong>
+                </span>
+                <button 
+                    onClick={handleLogout}
+                    style={{
+                        backgroundColor: 'transparent',
+                        color: '#ff2d78',
+                        border: '1px solid rgba(255, 45, 120, 0.3)',
+                        borderRadius: '0.5rem',
+                        padding: '0.4rem 1rem',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        fontFamily: 'inherit'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = 'rgba(255, 45, 120, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent'
+                    }}
+                >
+                    Logout
+                </button>
+            </div>
 
             {/* Page Header */}
             <header className='page-header'>
