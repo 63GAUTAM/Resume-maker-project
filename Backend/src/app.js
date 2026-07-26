@@ -8,7 +8,8 @@ app.use(express.json())
 app.use(cookieParser())
 const cleanFrontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, "") : ""
 const allowedOrigins = [
-    cleanFrontendUrl
+    cleanFrontendUrl,
+    "https://genairesume-ats.onrender.com" // Deployed frontend URL
 ].filter(Boolean)
 
 app.use(cors({
