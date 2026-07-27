@@ -2,7 +2,8 @@ const { GoogleGenAI } = require("@google/genai")
 const { z } = require("zod")
 const { zodToJsonSchema } = require("zod-to-json-schema")
 const puppeteer = require("puppeteer-core")
-const chromium = require("@sparticuz/chromium")
+const rawChromium = require("@sparticuz/chromium")
+const chromium = rawChromium.default || rawChromium
 
 // Parse API keys list from comma-separated env values, with fallbacks
 function getApiKeys() {
@@ -169,7 +170,7 @@ async function generatePdfFromHtml(htmlContent) {
             args: chromium.args,
             defaultViewport: chromium.defaultViewport,
             executablePath: await chromium.executablePath(),
-            headless: chromium.headless,
+            headless: true,
         }
     } else {
         // Local development: use standard local chrome or chromium path
