@@ -72,6 +72,17 @@ export const useInterview = () => {
         }
         catch (error) {
             console.error("Failed to download resume PDF:", error)
+            if (error.response?.data instanceof Blob) {
+                const text = await error.response.data.text()
+                try {
+                    const errJson = JSON.parse(text)
+                    alert(`Failed to download resume: ${errJson.message || text}`)
+                } catch (_) {
+                    alert(`Failed to download resume: ${text}`)
+                }
+            } else {
+                alert(`Failed to download resume: ${error.message}`)
+            }
         } finally {
             setLoading(false)
         }
