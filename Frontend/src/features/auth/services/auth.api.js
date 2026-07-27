@@ -41,3 +41,13 @@ export async function getMe() {
     return response.data
 
 }
+
+export async function resetPassword({ email, username, newPassword }) {
+
+    const response = await api.post("/api/auth/reset-password", {
+        email, username, newPassword
+    })
+
+    return response.data
+
+}

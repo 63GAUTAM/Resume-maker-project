@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "../auth.context";
-import { login, register, logout, getMe } from "../services/auth.api";
+import { login, register, logout, getMe, resetPassword } from "../services/auth.api";
 
 
 
@@ -57,6 +57,21 @@ export const useAuth = () => {
         }
     }, [setLoading, setUser])
 
+    const handleResetPassword = useCallback(async ({ email, username, newPassword }) => {
+        setLoading(true)
+        setError(null)
+        try {
+            const data = await resetPassword({ email, username, newPassword })
+            return data
+        } catch (err) {
+            const message = err.response?.data?.message || "Password reset failed. Please try again."
+            setError(message)
+            throw err
+        } finally {
+            setLoading(false)
+        }
+    }, [setLoading])
+
     useEffect(() => {
 
         const getAndSetUser = async () => {
@@ -72,5 +87,5 @@ export const useAuth = () => {
 
     }, [])
 
-    return { user, loading, error, handleRegister, handleLogin, handleLogout }
+    return { user, loading, error, handleRegister, handleLogin, handleLogout, handleResetPassword }
 }

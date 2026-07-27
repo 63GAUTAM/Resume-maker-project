@@ -62,6 +62,9 @@ const Login = () => {
                             )}
                         </button>
                     </div>
+                    <div style={{ textAlign: 'right', marginTop: '-0.25rem', marginBottom: '0.5rem' }}>
+                        <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: '#ff2d78' }}>Forgot Password?</Link>
+                    </div>
                     <button className='button primary-button' >Login</button>
                 </form>
                 <p>Don't have an account? <Link to={"/register"} >Register</Link> </p>

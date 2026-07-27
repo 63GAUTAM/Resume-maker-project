@@ -35,5 +35,11 @@ authRouter.get("/logout", authController.logoutUserController)
  */
 authRouter.get("/get-me", authMiddleware.authUser, authController.getMeController)
 
+/**
+ * @route POST /api/auth/reset-password
+ * @description Reset user password by verifying email and username
+ * @access Public
+ */
+authRouter.post("/reset-password", authController.resetPasswordController)
 
 module.exports = authRouter

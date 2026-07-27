@@ -170,11 +170,45 @@ async function getMeController(req, res, next) {
     }
 }
 
+/**
+ * @name resetPasswordController
+ * @description resets a user's password if email and username match.
+ * @access Public
+ */
+async function resetPasswordController(req, res, next) {
+    try {
+        const { email, username, newPassword } = req.body
 
+        if (!email || !username || !newPassword) {
+            return res.status(400).json({
+                message: "Please provide email, username and new password"
+            })
+        }
+
+        const user = await userModel.findOne({ email, username })
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found with matching email and username"
+            })
+        }
+
+        const hash = await bcrypt.hash(newPassword, 10)
+        user.password = hash
+        await user.save()
+
+        res.status(200).json({
+            message: "Password reset successfully. You can now login with your new password."
+        })
+    } catch (err) {
+        next(err)
+    }
+}
 
 module.exports = {
     registerUserController,
     loginUserController,
     logoutUserController,
-    getMeController
+    getMeController,
+    resetPasswordController
 }
